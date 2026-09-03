@@ -266,14 +266,20 @@ data "aws_iam_policy_document" "github_deploy" {
       "s3:DeleteBucket",
       "s3:ListBucket",
       "s3:ListBucketVersions",
+
       "s3:GetBucket*",
       "s3:PutBucket*",
       "s3:DeleteBucketPolicy",
+
+      "s3:GetAccelerateConfiguration",
+      "s3:GetLifecycleConfiguration",
+      "s3:PutLifecycleConfiguration",
+      "s3:GetReplicationConfiguration",
+
       "s3:GetObject",
       "s3:PutObject",
       "s3:DeleteObject",
       "s3:DeleteObjectVersion",
-      "s3:GetAccelerateConfiguration",
     ]
 
     resources = [
