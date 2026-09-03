@@ -1,0 +1,55 @@
+# Terraform working directories
+**/.terraform/*
+
+# Terraform state contains sensitive infrastructure data
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+
+# Terraform plans
+*.tfplan
+tfplan
+plan.out
+
+# Variable files may contain secrets
+*.tfvars
+*.tfvars.json
+!*.example.tfvars
+
+# Crash and debug logs
+crash.log
+crash.*.log
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local CLI configuration
+.terraformrc
+terraform.rc
+
+# Environment and secret files
+.env
+.env.*
+!.env.example
+
+# AWS credentials
+.aws/
+credentials
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+
+# Generated security reports
+reports/
+
+modules/remediation/build/
