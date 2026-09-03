@@ -1,5 +1,10 @@
-aws_region        = "us-east-1"
-project_name      = "secure-hardening"
-github_owner      = "png270"
-github_repository = "aws-infra"
+aws_region   = "us-east-1"
+project_name = "secure-hardening"
+
+# GitHub repositories using immutable OIDC subjects require both names and IDs.
+# Find them with:
+# curl -s https://api.github.com/repos/OWNER/REPOSITORY |
+#   jq '{owner_id: .owner.id, repository_id: .id}'
+github_owner       = "YOUR_GITHUB_OWNER@YOUR_OWNER_ID"
+github_repository  = "YOUR_REPOSITORY@YOUR_REPOSITORY_ID"
 github_environment = "production"
