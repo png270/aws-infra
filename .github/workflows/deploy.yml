@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@d63268305364d27d6d9c34b2079f598444040856 # v6.0.2
+        uses: actions/checkout@v6.0.2 # v6.0.2
         with:
           persist-credentials: false
 
