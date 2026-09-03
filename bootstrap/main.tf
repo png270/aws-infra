@@ -10,8 +10,7 @@ locals {
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = local.state_bucket_name
-
+  bucket        = local.state_bucket_name
   force_destroy = false
 
   tags = {
@@ -166,20 +165,28 @@ data "aws_iam_policy_document" "github_deploy" {
 
     actions = [
       "sts:GetCallerIdentity",
+
       "ec2:Describe*",
+
       "iam:Get*",
       "iam:List*",
+
       "s3:ListAllMyBuckets",
-      "s3:GetBucketLocation",
+
       "cloudtrail:Get*",
       "cloudtrail:Describe*",
       "cloudtrail:List*",
+
       "lambda:Get*",
       "lambda:List*",
+
       "events:DescribeRule",
       "events:List*",
+
       "logs:Describe*",
-      "ssm:DescribeInstanceInformation"
+      "logs:ListTags*",
+
+      "ssm:DescribeInstanceInformation",
     ]
 
     resources = ["*"]
@@ -193,30 +200,49 @@ data "aws_iam_policy_document" "github_deploy" {
       "ec2:CreateVpc",
       "ec2:DeleteVpc",
       "ec2:ModifyVpcAttribute",
+
       "ec2:CreateSubnet",
       "ec2:DeleteSubnet",
       "ec2:ModifySubnetAttribute",
+
       "ec2:CreateInternetGateway",
       "ec2:DeleteInternetGateway",
       "ec2:AttachInternetGateway",
       "ec2:DetachInternetGateway",
+
       "ec2:CreateRouteTable",
       "ec2:DeleteRouteTable",
       "ec2:AssociateRouteTable",
       "ec2:DisassociateRouteTable",
+      "ec2:ReplaceRouteTableAssociation",
+
       "ec2:CreateRoute",
       "ec2:DeleteRoute",
+      "ec2:ReplaceRoute",
+
       "ec2:CreateSecurityGroup",
       "ec2:DeleteSecurityGroup",
       "ec2:AuthorizeSecurityGroupEgress",
       "ec2:RevokeSecurityGroupEgress",
       "ec2:AuthorizeSecurityGroupIngress",
       "ec2:RevokeSecurityGroupIngress",
+      "ec2:ModifySecurityGroupRules",
+      "ec2:UpdateSecurityGroupRuleDescriptionsEgress",
+      "ec2:UpdateSecurityGroupRuleDescriptionsIngress",
+
       "ec2:RunInstances",
       "ec2:TerminateInstances",
+      "ec2:StartInstances",
+      "ec2:StopInstances",
+      "ec2:ModifyInstanceAttribute",
+      "ec2:ModifyInstanceMetadataOptions",
+
+      "ec2:AssociateIamInstanceProfile",
+      "ec2:DisassociateIamInstanceProfile",
+      "ec2:ReplaceIamInstanceProfileAssociation",
+
       "ec2:CreateTags",
       "ec2:DeleteTags",
-      "ec2:ModifyInstanceAttribute",
     ]
 
     resources = ["*"]
@@ -232,20 +258,23 @@ data "aws_iam_policy_document" "github_deploy" {
       "iam:UpdateAssumeRolePolicy",
       "iam:TagRole",
       "iam:UntagRole",
+
       "iam:PassRole",
       "iam:AttachRolePolicy",
       "iam:DetachRolePolicy",
+
       "iam:CreatePolicy",
       "iam:DeletePolicy",
       "iam:CreatePolicyVersion",
       "iam:DeletePolicyVersion",
       "iam:SetDefaultPolicyVersion",
+      "iam:TagPolicy",
+      "iam:UntagPolicy",
+
       "iam:CreateInstanceProfile",
       "iam:DeleteInstanceProfile",
       "iam:AddRoleToInstanceProfile",
       "iam:RemoveRoleFromInstanceProfile",
-      "iam:TagPolicy",
-      "iam:UntagPolicy",
       "iam:TagInstanceProfile",
       "iam:UntagInstanceProfile",
     ]
@@ -253,7 +282,7 @@ data "aws_iam_policy_document" "github_deploy" {
     resources = [
       "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/${var.project_name}-dev-*",
       "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${var.project_name}-dev-*",
-      "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:instance-profile/${var.project_name}-dev-*"
+      "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:instance-profile/${var.project_name}-dev-*",
     ]
   }
 
@@ -263,30 +292,17 @@ data "aws_iam_policy_document" "github_deploy" {
 
     actions = [
       "s3:CreateBucket",
-      "s3:DeleteBucket",
-      "s3:ListBucket",
-      "s3:ListBucketVersions",
-
-      "s3:GetBucket*",
-      "s3:PutBucket*",
-      "s3:DeleteBucketPolicy",
-
-      "s3:GetAccelerateConfiguration",
-      "s3:GetLifecycleConfiguration",
-      "s3:PutLifecycleConfiguration",
-      "s3:GetReplicationConfiguration",
-
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:DeleteObjectVersion",
+      "s3:Get*",
+      "s3:ListBucket*",
+      "s3:Put*",
+      "s3:Delete*",
     ]
 
     resources = [
       "arn:${data.aws_partition.current.partition}:s3:::${var.project_name}-dev-*",
       "arn:${data.aws_partition.current.partition}:s3:::${var.project_name}-dev-*/*",
       aws_s3_bucket.terraform_state.arn,
-      "${aws_s3_bucket.terraform_state.arn}/*"
+      "${aws_s3_bucket.terraform_state.arn}/*",
     ]
   }
 
@@ -300,8 +316,10 @@ data "aws_iam_policy_document" "github_deploy" {
       "cloudtrail:DeleteTrail",
       "cloudtrail:StartLogging",
       "cloudtrail:StopLogging",
+      "cloudtrail:PutEventSelectors",
       "cloudtrail:AddTags",
       "cloudtrail:RemoveTags",
+
       "lambda:CreateFunction",
       "lambda:DeleteFunction",
       "lambda:UpdateFunctionCode",
@@ -310,19 +328,22 @@ data "aws_iam_policy_document" "github_deploy" {
       "lambda:RemovePermission",
       "lambda:TagResource",
       "lambda:UntagResource",
+
       "events:PutRule",
       "events:DeleteRule",
       "events:PutTargets",
       "events:RemoveTargets",
       "events:TagResource",
       "events:UntagResource",
+
       "logs:CreateLogGroup",
       "logs:DeleteLogGroup",
       "logs:PutRetentionPolicy",
+      "logs:DeleteRetentionPolicy",
       "logs:TagResource",
       "logs:UntagResource",
-      "cloudtrail:PutEventSelectors",
       "logs:ListTagsForResource",
+      "logs:ListTagsLogGroup",
     ]
 
     resources = ["*"]
@@ -334,4 +355,3 @@ resource "aws_iam_role_policy" "github_deploy" {
   role   = aws_iam_role.github_deploy.id
   policy = data.aws_iam_policy_document.github_deploy.json
 }
-
