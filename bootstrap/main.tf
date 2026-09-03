@@ -215,7 +215,8 @@ data "aws_iam_policy_document" "github_deploy" {
       "ec2:RunInstances",
       "ec2:TerminateInstances",
       "ec2:CreateTags",
-      "ec2:DeleteTags"
+      "ec2:DeleteTags",
+      "ec2:ModifyInstanceAttribute",
     ]
 
     resources = ["*"]
@@ -271,7 +272,8 @@ data "aws_iam_policy_document" "github_deploy" {
       "s3:GetObject",
       "s3:PutObject",
       "s3:DeleteObject",
-      "s3:DeleteObjectVersion"
+      "s3:DeleteObjectVersion",
+      "s3:GetAccelerateConfiguration",
     ]
 
     resources = [
@@ -314,6 +316,7 @@ data "aws_iam_policy_document" "github_deploy" {
       "logs:TagResource",
       "logs:UntagResource",
       "cloudtrail:PutEventSelectors",
+      "logs:ListTagsForResource",
     ]
 
     resources = ["*"]
