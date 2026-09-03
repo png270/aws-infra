@@ -1,0 +1,120 @@
+name: Terraform deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Terraform operation to execute
+        required: true
+        type: choice
+        default: plan
+        options:
+          - plan
+          - apply
+          - destroy
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: secure-hardening-production
+  cancel-in-progress: false
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_INPUT: "false"
+  TF_VAR_owner: ${{ github.repository_owner }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.operation }}
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    environment:
+      name: production
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: environments/dev
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d63268305364d27d6d9c34b2079f598444040856 # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "1.15.9"
+          terraform_wrapper: false
+
+      - name: Authenticate to AWS with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: gha-${{ github.run_id }}
+          mask-aws-account-id: true
+          unset-current-credentials: true
+
+      - name: Verify assumed identity
+        working-directory: .
+        run: |
+          CALLER_ARN=$(aws sts get-caller-identity --query Arn --output text)
+          if [[ "$CALLER_ARN" != *":assumed-role/secure-hardening-github-deploy/"* ]]; then
+            echo "Unexpected AWS identity: $CALLER_ARN"
+            exit 1
+          fi
+          echo "Successfully assumed the expected deployment role."
+
+      - name: Initialize remote backend
+        run: |
+          terraform init \
+            -backend-config="bucket=${TF_STATE_BUCKET}" \
+            -backend-config="key=environments/dev/terraform.tfstate" \
+            -backend-config="region=${AWS_REGION}" \
+            -backend-config="encrypt=true" \
+            -backend-config="use_lockfile=true"
+
+      - name: Validate configuration
+        run: terraform validate
+
+      - name: Create reviewed plan
+        run: |
+          if [[ "${{ inputs.operation }}" == "destroy" ]]; then
+            terraform plan -destroy -out=tfplan
+          else
+            terraform plan -out=tfplan
+          fi
+
+      - name: Display plan summary
+        run: terraform show -no-color tfplan
+
+      - name: Apply reviewed plan
+        if: inputs.operation == 'apply' || inputs.operation == 'destroy'
+        run: terraform apply -auto-approve tfplan
+
+      - name: Verify applied configuration has no drift
+        if: inputs.operation == 'apply'
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -no-color
+          EXIT_CODE=$?
+          set -e
+
+          if [[ "$EXIT_CODE" -eq 0 ]]; then
+            echo "Deployment matches the reviewed Terraform configuration."
+          elif [[ "$EXIT_CODE" -eq 2 ]]; then
+            echo "Unexpected drift detected immediately after deployment."
+            exit 1
+          else
+            echo "Terraform drift check failed."
+            exit "$EXIT_CODE"
+          fi

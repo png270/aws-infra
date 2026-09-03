@@ -1,0 +1,5 @@
+aws_region        = "us-east-1"
+project_name      = "secure-hardening"
+github_owner      = "png270"
+github_repository = "aws-infra"
+github_environment = "production"
