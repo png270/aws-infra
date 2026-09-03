@@ -24,7 +24,7 @@ concurrency:
 env:
   TF_IN_AUTOMATION: "true"
   TF_INPUT: "false"
-  TF_VAR_owner: ${{ github.repository_owner }}
+  TF_VAR_owner: ${{ vars.TF_OWNER }}
   AWS_REGION: ${{ vars.AWS_REGION }}
   TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
 
